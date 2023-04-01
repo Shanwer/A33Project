@@ -14,7 +14,7 @@ public class SQLiteJDBC {
             Class.forName("org.sqlite.JDBC");
             c = DriverManager.getConnection(DBPath);
             stmt = c.createStatement();
-            String sql = "SELECT MAX(ID) FROM USER";//SELECT LAST_INSERT_ROWID() FROM USER会有异常
+            String sql = "SELECT COUNT(ID) FROM USER;";//SELECT LAST_INSERT_ROWID()返回的结果不对
             rs = stmt.executeQuery(sql);
             Last_ID = rs.getInt(1);
             //System.out.println(Last_ID);

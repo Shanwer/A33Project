@@ -12,52 +12,53 @@ public class Main {
         double startTime = System.nanoTime();
         MessageDigest md5 = MessageDigest.getInstance("MD5");
         System.out.println("初始化数据库中...");
+        SQLiteJDBC SQLiteJDBCObj = null;
         try{
             if(args[0].equals("-DBPath") && args[1] != null) {
-                SQLiteJDBC SQLiteJDBCObj = new SQLiteJDBC("jdbc:sqlite:" + args[1]);//指定数据库路径
-                Javalin PostHandler = Javalin.create(/*config*/)
-                    .post("/register", ctx -> {
-                        if((Objects.equals(ctx.formParam("type"), "register"))) {
-                            if (Objects.requireNonNull(ctx.formParam("username")).length() > 20 ||
-                                    Objects.requireNonNull(ctx.formParam("password")).length() > 50 ||
-                                    Objects.requireNonNull(ctx.formParam("password")).length() < 8) {
-                                    ctx.status(405);//用户名或密码长度不符合规范
-                            }else{
-                                byte[] inputByteArray = Objects.requireNonNull(ctx.formParam("password")).getBytes();
-                                md5.update(inputByteArray);
-                                byte[] resultByteArray = md5.digest();//对密码进行MD5加密，增强安全性
-                                //System.out.println("密码加密成功");
-                                SQLiteJDBCObj.register(ctx.formParam("username"), byteArrayToHex(resultByteArray));
-                                ctx.status(201);//创建成功
-                            }
-
-                        }
-                    })
-                    .post("/login", ctx -> {
-                        if(Objects.equals(ctx.formParam("type"),"login")) {
-                            if (Objects.requireNonNull(ctx.formParam("username")).length() > 20 ||
-                                    Objects.requireNonNull(ctx.formParam("password")).length() > 50 ||
-                                    Objects.requireNonNull(ctx.formParam("password")).length() < 8) {
-                                ctx.status(405);//用户名或密码长度不符合规范
-                            } else {
-                                byte[] inputByteArray = Objects.requireNonNull(ctx.formParam("password")).getBytes();
-                                md5.update(inputByteArray);
-                                byte[] resultByteArray = md5.digest();
-                                SQLiteJDBCObj.login(ctx.formParam("username"), byteArrayToHex(resultByteArray));
-                                ctx.status(201);
-                            }
-                        }
-                    })
-                    .start(8080);
-                double jsonEndTime = System.nanoTime();
-                System.out.println("开启服务端后所用时间:" + (jsonEndTime - startTime) / 1000000000 + "秒");
+                SQLiteJDBCObj = new SQLiteJDBC("jdbc:sqlite:" + args[1]);//指定数据库路径
             }else
                 System.out.println("请指定正确的数据库位置！用法：java -jar A33Server.jar -DBPath 数据库文件的路径");
         }catch(ArrayIndexOutOfBoundsException exc){
             exc.printStackTrace();
             System.out.println("请输入参数！用法：java -jar A33Server.jar -DBPath 数据库文件的路径");
         }
+        Javalin PostHandler = Javalin.create(/*config*/).start(8080);
+        SQLiteJDBC finalSQLiteJDBCObj = SQLiteJDBCObj;
 
+        PostHandler.post("/register", ctx -> {
+                    if((Objects.equals(ctx.formParam("type"), "register"))) {
+                        if (Objects.requireNonNull(ctx.formParam("username")).length() > 20 ||
+                                Objects.requireNonNull(ctx.formParam("password")).length() > 50 ||
+                                Objects.requireNonNull(ctx.formParam("password")).length() < 8) {
+                            ctx.status(405);//用户名或密码长度不符合规范
+                        }else{
+                            byte[] inputByteArray = Objects.requireNonNull(ctx.formParam("password")).getBytes();
+                            md5.update(inputByteArray);
+                            byte[] resultByteArray = md5.digest();//对密码进行MD5加密，增强安全性
+                            //System.out.println("密码加密成功");
+                            Objects.requireNonNull(finalSQLiteJDBCObj).register(ctx.formParam("username"), byteArrayToHex(resultByteArray));
+                            ctx.status(201);//创建成功
+                        }
+                    }
+                });
+
+        PostHandler.post("/login", ctx -> {
+            if(Objects.equals(ctx.formParam("type"),"login")) {
+                if (Objects.requireNonNull(ctx.formParam("username")).length() > 20 ||
+                        Objects.requireNonNull(ctx.formParam("password")).length() > 50 ||
+                        Objects.requireNonNull(ctx.formParam("password")).length() < 8) {
+                    ctx.status(405);//用户名或密码长度不符合规范
+                } else {
+                    byte[] inputByteArray = Objects.requireNonNull(ctx.formParam("password")).getBytes();
+                    md5.update(inputByteArray);
+                    byte[] resultByteArray = md5.digest();
+                    Objects.requireNonNull(finalSQLiteJDBCObj).login(ctx.formParam("username"), byteArrayToHex(resultByteArray));
+                    ctx.status(201);
+                }
+            }
+        });
+        double EndTime = System.nanoTime();
+        System.out.println("开启服务端后所用时间:" + (EndTime - startTime) / 1000000000 + "秒");
     }
     public static String byteArrayToHex(byte[] byteArray) {
         char[] hexDigits = {'0','1','2','3','4','5','6','7','8','9', 'A','B','C','D','E','F' };
