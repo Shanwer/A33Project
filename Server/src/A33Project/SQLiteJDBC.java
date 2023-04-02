@@ -3,7 +3,6 @@ package A33Project;
 import java.sql.*;
 public class SQLiteJDBC {
     //负责注册与登录，访问数据库
-    //TODO:判断账号和密码长度
     private Connection c = null;
     private ResultSet rs;
     private static int Last_ID;
@@ -29,40 +28,43 @@ public class SQLiteJDBC {
 
     public void register(String username,String password) {
         if(username!=null && password!=null) {
-            try {
                 PreparedStatement preStmt;
-                //TODO:日后需要注意防范SQL注入
+                //预编译包含？的语句可防范sql注入
                 String registerSql = "INSERT INTO USER (ID,USERNAME,PASSWORD) " +
                         "values(?,?,?)";
-                String checkDuplicatedNameSql = "SELECT * FROM USER WHERE USERNAME = ?";
+                /*
+                String checkDuplicatedNameSql = "SELECT * FROM USER WHERE USERNAME = ?";//添加列唯一约束,原来的不需要了
                 preStmt = c.prepareStatement(checkDuplicatedNameSql);
                 preStmt.setString(1,username);
-                rs = preStmt.executeQuery();//只会用ResultSet的笨办法查重了
+                rs = preStmt.executeQuery();
                 if(rs.next()){
                     preStmt.close();
                     rs.close();
-                    //TODO:重复用户名，做点啥
-                }else{
+                */
+                try {
                     preStmt = c.prepareStatement(registerSql);
                     //System.out.println("SQL语句预编译成功");
-                    preStmt.setInt(1,++Last_ID);
-                    preStmt.setString(2,username);
-                    preStmt.setString(3,password);
+                    preStmt.setInt(1, ++Last_ID);
+                    preStmt.setString(2, username);
+                    preStmt.setString(3, password);
                     preStmt.execute();
                     preStmt.close();
                     rs.close();
+            } catch (SQLException exc) {
+                    if(exc.getCause() instanceof SQLIntegrityConstraintViolationException){
+                        System.out.println("重复的用户名！违反唯一约束");
+                        //TODO:违反USERNAME字段唯一约束,do something
+                    }else {
+                        exc.printStackTrace();
+                        System.out.println("数据库执行异常");
+                    }
                 }
-            } catch (SQLException e) {
-                e.printStackTrace();
-                System.out.println("数据库执行异常");
-            }
         }
     }
     public void login(String username,String password){
         if(username!=null && password!=null){
             try {
                 PreparedStatement preStmt;
-                //TODO:日后需要防范SQL注入
                 String sql = "SELECT USERNAME,PASSWORD FROM USER WHERE USERNAME IS ? AND PASSWORD IS ?";
                 String usernameInDB = null,passwordInDB = null;
                 preStmt = c.prepareStatement(sql);
@@ -83,6 +85,5 @@ public class SQLiteJDBC {
                 System.out.println("数据库异常");
             }
         }
-
     }
 }
