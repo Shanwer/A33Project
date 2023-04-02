@@ -27,7 +27,6 @@ public class SQLiteJDBC {
     }
 
     public void register(String username,String password) {
-        if(username!=null && password!=null) {
                 PreparedStatement preStmt;
                 //预编译包含？的语句可防范sql注入
                 String registerSql = "INSERT INTO USER (ID,USERNAME,PASSWORD) " +
@@ -38,6 +37,7 @@ public class SQLiteJDBC {
                 preStmt.setString(1,username);
                 rs = preStmt.executeQuery();
                 if(rs.next()){
+                    //检测到重复用户名
                     preStmt.close();
                     rs.close();
                 */
@@ -59,10 +59,8 @@ public class SQLiteJDBC {
                         System.out.println("数据库执行异常");
                     }
                 }
-        }
     }
     public void login(String username,String password){
-        if(username!=null && password!=null){
             try {
                 PreparedStatement preStmt;
                 String sql = "SELECT USERNAME,PASSWORD FROM USER WHERE USERNAME IS ? AND PASSWORD IS ?";
@@ -84,6 +82,5 @@ public class SQLiteJDBC {
                 e.printStackTrace();
                 System.out.println("数据库异常");
             }
-        }
     }
 }
