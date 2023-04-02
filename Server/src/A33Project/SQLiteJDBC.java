@@ -61,21 +61,23 @@ public class SQLiteJDBC {
     public void login(String username,String password){
         if(username!=null && password!=null){
             try {
-                Statement stmt;
-                //日后需要防范SQL注入
-                String sql = "SELECT USERNAME,PASSWORD FROM USER";
+                PreparedStatement preStmt;
+                //TODO:日后需要防范SQL注入
+                String sql = "SELECT USERNAME,PASSWORD FROM USER WHERE USERNAME IS ? AND PASSWORD IS ?";
                 String usernameInDB = null,passwordInDB = null;
-                stmt = c.prepareStatement(sql);
-                rs = stmt.executeQuery(sql);
+                preStmt = c.prepareStatement(sql);
+                preStmt.setString(1,username);
+                preStmt.setString(2,password);
+                rs = preStmt.executeQuery(sql);
                 while(rs.next()){
                     usernameInDB = rs.getString("username");
                     passwordInDB = rs.getString("password");
-                }//TODO:这里换成数据库内查询操作效率会更高
+                }
                 if(username.equals(usernameInDB)&&password.equals(passwordInDB)){
                     //TODO:登陆成功后的操作
                 }
                 rs.close();
-                stmt.close();
+                preStmt.close();
             } catch (SQLException e) {
                 e.printStackTrace();
                 System.out.println("数据库异常");
