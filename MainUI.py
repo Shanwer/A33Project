@@ -17,7 +17,7 @@ def register():
     password = loginUI['passwordUI']
     data = {"type": "register", "username": username, "password": password}
     response = requests.post(url, data=json.dumps(data))
-    if response.status_code == 200:
+    if response.status_code == 201:
         toast("注册成功", color="success")
     else:
         toast("注册失败", color="error")
