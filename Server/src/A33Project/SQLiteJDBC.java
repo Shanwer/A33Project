@@ -29,8 +29,8 @@ public class SQLiteJDBC {
     public void register(String username,String password) {
                 PreparedStatement preStmt;
                 //预编译包含？的语句可防范sql注入
-                String registerSql = "INSERT INTO USER (ID,USERNAME,PASSWORD) " +
-                        "values(?,?,?)";
+                String registerSql = "INSERT INTO USER (ID,USERNAME,PASSWORD,PERMISSION) " +
+                        "values(?,?,?,?)";
                 /*
                 String checkDuplicatedNameSql = "SELECT * FROM USER WHERE USERNAME = ?";//添加列唯一约束,原来的不需要了
                 preStmt = c.prepareStatement(checkDuplicatedNameSql);
@@ -47,6 +47,7 @@ public class SQLiteJDBC {
                     preStmt.setInt(1, ++Last_ID);
                     preStmt.setString(2, username);
                     preStmt.setString(3, password);
+                    preStmt.setInt(4,0);
                     preStmt.execute();
                     preStmt.close();
                     rs.close();
