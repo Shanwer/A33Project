@@ -27,33 +27,35 @@ public class Main {
 
         PostHandler.post("/register", ctx -> {
                     if((Objects.equals(ctx.formParam("type"), "register"))) {
-                        if (Objects.requireNonNull(ctx.formParam("username")).length() > 20 ||
-                                Objects.requireNonNull(ctx.formParam("password")).length() > 50 ||
-                                Objects.requireNonNull(ctx.formParam("password")).length() < 8) {
-                            ctx.status(405);//用户名或密码长度不符合规范
-                        }else{
+                        boolean lengthWithinRange = Objects.requireNonNull(ctx.formParam("username")).length() < 20 ||
+                                Objects.requireNonNull(ctx.formParam("password")).length() < 50 ||
+                                Objects.requireNonNull(ctx.formParam("password")).length() > 8;
+                        if (lengthWithinRange){
                             byte[] inputByteArray = Objects.requireNonNull(ctx.formParam("password")).getBytes();
                             md5.update(inputByteArray);
                             byte[] resultByteArray = md5.digest();//对密码进行MD5加密，增强安全性
                             //System.out.println("密码加密成功");
                             Objects.requireNonNull(finalSQLiteJDBCObj).register(ctx.formParam("username"), byteArrayToHex(resultByteArray));
                             ctx.status(201);//创建成功
+                        } else {
+                            ctx.status(403);//用户名或密码长度不符合规范
                         }
                     }
                 });
 
         PostHandler.post("/login", ctx -> {
             if(Objects.equals(ctx.formParam("type"),"login")) {
-                if (Objects.requireNonNull(ctx.formParam("username")).length() > 20 ||
-                        Objects.requireNonNull(ctx.formParam("password")).length() > 50 ||
-                        Objects.requireNonNull(ctx.formParam("password")).length() < 8) {
-                    ctx.status(405);//用户名或密码长度不符合规范
-                } else {
+                boolean lengthWithinRange = Objects.requireNonNull(ctx.formParam("username")).length() < 20 ||
+                        Objects.requireNonNull(ctx.formParam("password")).length() < 50 ||
+                        Objects.requireNonNull(ctx.formParam("password")).length() > 8;
+                if (lengthWithinRange) {
                     byte[] inputByteArray = Objects.requireNonNull(ctx.formParam("password")).getBytes();
                     md5.update(inputByteArray);
                     byte[] resultByteArray = md5.digest();
                     Objects.requireNonNull(finalSQLiteJDBCObj).login(ctx.formParam("username"), byteArrayToHex(resultByteArray));
-                    ctx.status(201);
+                    ctx.status(200);
+                } else {
+                    ctx.status(403);//用户名或密码长度不符合规范
                 }
             }
         });
