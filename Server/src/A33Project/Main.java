@@ -14,10 +14,12 @@ public class Main {
         System.out.println("初始化数据库中...");
         SQLiteJDBC SQLiteJDBCObj = null;
         try{
-            if(args[0].equals("-DBPath") && args[1] != null) {
+            if(args.length>=1 && args[0].equals("-DBPath") && args[1] != null) {
                 SQLiteJDBCObj = new SQLiteJDBC("jdbc:sqlite:" + args[1]);//指定数据库路径
-            }else
-                System.out.println("请指定正确的数据库位置！用法：java -jar A33Server.jar -DBPath 数据库文件的路径");
+            }else {
+                SQLiteJDBCObj = new SQLiteJDBC("jdbc:sqlite:C:\\Users\\Shanwer\\Documents\\Work\\GitHub\\A33Project\\A33Project.sqlite");//默认数据库地址
+                System.out.println("未指定数据库地址，使用默认地址");
+            }
         }catch(ArrayIndexOutOfBoundsException exc){
             exc.printStackTrace();
             System.out.println("请输入参数！用法：java -jar A33Server.jar -DBPath 数据库文件的路径");
@@ -28,26 +30,31 @@ public class Main {
 
         PostHandler.post("/register", ctx -> {
             if((Objects.equals(ctx.formParam("type"), "register"))) {
-                boolean lengthWithinRange = Objects.requireNonNull(ctx.formParam("username")).length() < 20 ||
-                        Objects.requireNonNull(ctx.formParam("password")).length() < 50 ||
+                boolean lengthWithinRange = Objects.requireNonNull(ctx.formParam("username")).length() < 20 &&
+                        Objects.requireNonNull(ctx.formParam("password")).length() < 50 &&
                         Objects.requireNonNull(ctx.formParam("password")).length() > 8;
                 if (lengthWithinRange){
                     byte[] inputByteArray = Objects.requireNonNull(ctx.formParam("password")).getBytes();
                     md5.update(inputByteArray);
                     byte[] resultByteArray = md5.digest();//对密码进行MD5加密，增强安全性
                     //System.out.println("密码加密成功");
-                    Objects.requireNonNull(finalSQLiteJDBCObj).register(ctx.formParam("username"), byteArrayToHex(resultByteArray));
-                    ctx.status(201);//创建成功
+                    if(Objects.requireNonNull(finalSQLiteJDBCObj).register(ctx.formParam("username"), byteArrayToHex(resultByteArray)) == 0){
+                        ctx.status(201);//创建成功
+                    }else {
+                        ctx.status(403);
+                        ctx.header("Reason","Occupied Username!");
+                    }
                 } else {
-                    ctx.status(403);//用户名或密码长度不符合规范
+                    ctx.status(403);//用户名或密码长度不符合规范 //在前端也检查长度，理论上除了黑客伪造请求外不会触发
+                    System.out.println("试图伪造请求，IP为：" + ctx.ip());
                 }
             }
         });
 
         PostHandler.post("/login", ctx -> {
             if(Objects.equals(ctx.formParam("type"),"login")) {
-                boolean lengthWithinRange = Objects.requireNonNull(ctx.formParam("username")).length() < 20 ||
-                        Objects.requireNonNull(ctx.formParam("password")).length() < 50 ||
+                boolean lengthWithinRange = Objects.requireNonNull(ctx.formParam("username")).length() < 20 &&
+                        Objects.requireNonNull(ctx.formParam("password")).length() < 50 &&
                         Objects.requireNonNull(ctx.formParam("password")).length() > 8;
                 if (lengthWithinRange) {
                     byte[] inputByteArray = Objects.requireNonNull(ctx.formParam("password")).getBytes();
@@ -56,7 +63,8 @@ public class Main {
                     Objects.requireNonNull(finalSQLiteJDBCObj).login(ctx.formParam("username"), byteArrayToHex(resultByteArray));
                     ctx.status(200);
                 } else {
-                    ctx.status(403);//用户名或密码长度不符合规范
+                    ctx.status(403);//用户名或密码长度不符合规范 //在前端也检查长度，理论上除了黑客伪造请求外不会触发
+                    System.out.println("试图伪造请求，IP为：" + ctx.ip());
                 }
             }
         });

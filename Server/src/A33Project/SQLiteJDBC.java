@@ -21,12 +21,13 @@ public class SQLiteJDBC {
             stmt.close();
         } catch (Exception e) {
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            System.out.println("请指定正确的数据库位置！用法：java -jar A33Server.jar -DBPath 数据库文件的路径");
             System.exit(0);
         }
         System.out.println("数据库初始化成功！");
     }
 
-    public void register(String username,String password) {
+    public int register(String username,String password) {
                 PreparedStatement preStmt;
                 //预编译包含？的语句可防范sql注入
                 String registerSql = "INSERT INTO USER (ID,USERNAME,PASSWORD,PERMISSION) " +
@@ -51,37 +52,48 @@ public class SQLiteJDBC {
                     preStmt.execute();
                     preStmt.close();
                     rs.close();
+                    return 0;
             } catch (SQLException exc) {
-                    if(exc.getCause() instanceof SQLIntegrityConstraintViolationException){
-                        System.out.println("重复的用户名！违反唯一约束");
-                        //TODO:违反USERNAME字段唯一约束,do something
+                    if(exc.getErrorCode()==19){
+                        System.out.println("重复的用户名！用户名为："+ username +"违反唯一约束");//SQLITE_CONSTRAINT error code为19
+                        Last_ID--;//否则id会注册错误
+                        return 19;
                     }else {
                         exc.printStackTrace();
                         System.out.println("数据库执行异常");
+                        return 1;
                     }
                 }
     }
-    public void login(String username,String password){
-            try {
-                PreparedStatement preStmt;
-                String sql = "SELECT USERNAME,PASSWORD FROM USER WHERE USERNAME IS ? AND PASSWORD IS ?";
-                String usernameInDB = null,passwordInDB = null;
-                preStmt = c.prepareStatement(sql);
-                preStmt.setString(1,username);
-                preStmt.setString(2,password);
-                rs = preStmt.executeQuery(sql);
-                while(rs.next()){
-                    usernameInDB = rs.getString("username");
-                    passwordInDB = rs.getString("password");
-                }
-                if(username.equals(usernameInDB)&&password.equals(passwordInDB)){
-                    //TODO:登陆成功后的操作
-                }
-                rs.close();
-                preStmt.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-                System.out.println("数据库异常");
+    public void login(String username,String password) {
+        try {
+            PreparedStatement preStmt;
+            String sql = "SELECT USERNAME,PASSWORD FROM USER WHERE USERNAME IS ? AND PASSWORD IS ?";
+            String usernameInDB = null, passwordInDB = null;
+            preStmt = c.prepareStatement(sql);
+            preStmt.setString(1, username);
+            preStmt.setString(2, password);
+            rs = preStmt.executeQuery(sql);
+            while (rs.next()) {
+                usernameInDB = rs.getString("username");
+                passwordInDB = rs.getString("password");
             }
+            if (username.equals(usernameInDB) && password.equals(passwordInDB)) {
+                //TODO:登陆成功后的操作
+            }else{
+
+            }
+            rs.close();
+            preStmt.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("数据库异常");
+        }
+    }
+    public void changeUsername(String username,String newUsername,String password){
+        //TODO:修改用户名
+    }
+    public void changePassword(String username,String password,String newPassword){
+        //TODO:修改密码
     }
 }
