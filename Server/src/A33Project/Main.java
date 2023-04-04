@@ -69,7 +69,10 @@ public class Main {
                     byte[] resultByteArray = md5.digest();
                     if(Objects.requireNonNull(finalUserUtilObj).login(username, byteArrayToHex(resultByteArray), ctx.ip()) == 0){
                     ctx.status(200);
-                    ctx.sessionAttribute("user", username);
+                    if(ctx.req().getSession().getAttribute("user")!=null){
+                        ctx.req().changeSessionId();//抵御session固定攻击
+                    }else
+                        ctx.sessionAttribute("user", username);
                     }else{
                         ctx.status(403);
                         ctx.header("Reason","Incorrect username or password!");
