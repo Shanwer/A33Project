@@ -8,3 +8,4 @@
 ### 后端API  
 /register 注册  _post请求体: {"type":"register","username": "xxx", "password": "xxx"}_  
 /login 登录  _post请求体: {"type":"login","username": "xxx", "password": "xxx"}_  
+/logout 登出 get请求，销毁session
